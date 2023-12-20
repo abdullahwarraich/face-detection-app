@@ -40,6 +40,8 @@ export default {
         setLocalStorage('authToken', response.data.accessToken);
         setLocalStorage('currentUser', this.userName);
 
+        // Redirecting to the next page on successful login
+        this.$router.push('/face-recognition');
       } catch (error) {
         // Handling and logging any errors that occur during login
         console.error('Login failed', error);
