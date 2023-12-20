@@ -19,18 +19,70 @@
 </template>
   
 <script>
-export default {
+import { v4 as uuidv4 } from 'uuid';
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { removeDuplicatesById } from '@/utils/removeDuplicates';
 
+export default {
     data() {
         return {
             itemName: '',
             selectedImage: null,
+            currentUser: '',
+            processedImages: [],
         };
     },
-
+    created() {
+        const user = getLocalStorage('currentUser');
+        this.currentUser = user;
+    },
     methods: {
         // Method to handle process image for face detection
         async processImage() {
+            try {
+                const authToken = getLocalStorage('authToken');
+                const imageInput = this.$refs.imageInput;
+                const formData = new FormData();
+                formData.append('file', imageInput.files[0]);
+                formData.append('username', this.currentUser);
+
+                // Add the image to the processing state
+                const processingImage = { id: uuidv4(), user: this.currentUser, itemName: this.itemName, thumbnail: '-', processingState: 'In Progress', detectedFaces: '-' };
+                this.processedImages.push(processingImage);
+
+                 // Make API request to prcocess image
+                 const response = await this.$axios.post('/faceDetection', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+
+                const thumbnail = '-'
+                // Update the processing state to 'Processed' after a delay
+                setTimeout(() => {
+                    const index = this.processedImages.findIndex(img => img.id === processingImage.id);
+                    if (index !== -1) {
+                        // Update the processing state to 'Processed'
+                        this.processedImages[index].processingState = 'Processed';
+                        this.processedImages[index] = { ...this.processedImages[index], ...response.data, thumbnail: thumbnail };
+
+                        const storedUserResponses = getLocalStorage('processedImages');
+                        if (storedUserResponses && storedUserResponses.length) {
+                            setLocalStorage('processedImages', removeDuplicatesById([...this.processedImages, ...storedUserResponses]));
+                        } else {
+                            setLocalStorage('processedImages', removeDuplicatesById([...this.processedImages]));
+                        }
+                    }
+                }, 5000);
+
+            } catch (error) {
+                console.error('Image upload failed', error);
+            } finally {
+                // Call removeSelectedImage to clear the selected image
+                this.removeSelectedImage();
+                this.itemName = '';
+            }
         },
         // Method to handle image change in the input
         handleImageChange() {
