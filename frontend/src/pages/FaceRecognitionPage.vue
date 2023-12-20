@@ -37,6 +37,9 @@
                 <!-- Button to submit the form and process the image -->
                 <button type="submit">Submit</button>
 
+
+                <!-- Use the Screen Loader component and pass the isLoading value -->
+                <ScreenLoader :isLoading="isLoading" />
             </form>
 
             <!-- Display processed images for the logged-in user -->
@@ -86,8 +89,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 import { removeDuplicatesById } from '@/utils/removeDuplicates';
 import { createThumbnail } from '@/utils/thumbnailGenerator';
+import ScreenLoader from '@/components/ScreenLoader.vue';
 
 export default {
+    components: {
+        ScreenLoader
+    },
     data() {
         return {
             itemName: '',
@@ -95,6 +102,7 @@ export default {
             currentUser: '',
             processedImages: [],
             userStatistics: [],
+            isLoading: false,
         };
     },
     created() {
@@ -116,6 +124,7 @@ export default {
         // Method to handle process image for face detection
         async processImage() {
             try {
+                this.isLoading = true;
                 const authToken = getLocalStorage('authToken');
                 const imageInput = this.$refs.imageInput;
                 const formData = new FormData();
@@ -161,6 +170,7 @@ export default {
                 // Call removeSelectedImage to clear the selected image
                 this.removeSelectedImage();
                 this.itemName = '';
+                this.isLoading = false;
             }
         },
         // Method to handle image change in the input
