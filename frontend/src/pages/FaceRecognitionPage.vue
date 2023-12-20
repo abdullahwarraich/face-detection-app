@@ -22,6 +22,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 import { removeDuplicatesById } from '@/utils/removeDuplicates';
+import { createThumbnail } from '@/utils/thumbnailGenerator';
 
 export default {
     data() {
@@ -50,15 +51,17 @@ export default {
                 const processingImage = { id: uuidv4(), user: this.currentUser, itemName: this.itemName, thumbnail: '-', processingState: 'In Progress', detectedFaces: '-' };
                 this.processedImages.push(processingImage);
 
-                 // Make API request to prcocess image
-                 const response = await this.$axios.post('/faceDetection', formData, {
+                // Make API request to prcocess image
+                const response = await this.$axios.post('/faceDetection', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'Authorization': `Bearer ${authToken}`,
                     },
                 });
 
-                const thumbnail = '-'
+                // Create a thumbnail
+                const thumbnail = await createThumbnail(imageInput.files[0]);
+                
                 // Update the processing state to 'Processed' after a delay
                 setTimeout(() => {
                     const index = this.processedImages.findIndex(img => img.id === processingImage.id);
