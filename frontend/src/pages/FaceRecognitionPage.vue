@@ -6,14 +6,56 @@
                 <label for="itemName">Item Name:</label>
                 <input v-model="itemName" type="text" id="itemName" required>
 
+                <!-- Input for uploading image -->
                 <label for="image">Upload Image:</label>
                 <input type="file" ref="imageInput" accept="image/*" @change="handleImageChange" required>
 
+                <!-- Button to remove selected image -->
                 <button type="button" @click="removeSelectedImage" v-if="selectedImage">Remove Selected Image</button>
 
+                <!-- Button to submit the form and process the image -->
                 <button type="submit">Submit</button>
 
             </form>
+
+            <!-- Display processed images for the logged-in user -->
+            <div v-if="processedImages.length" class="processed-images-section">
+                <h3>Processed Images List</h3>
+                <!-- Table for displaying processed images -->
+                <table class="processed-images-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>State</th>
+                            <th>Thumbnail</th>
+                            <th>Detected Faces</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Loop through processed images and display in the table -->
+                        <tr v-for="processedImage in processedImages" :key="processedImage.id" class="processed-image-row">
+                            <td>{{ processedImage.itemName }}</td>
+                            <td>{{ processedImage.processingState }}</td>
+                            <td> <!-- Use a conditional statement to display the thumbnail or placeholder -->
+                                <img v-if="processedImage.thumbnail !== '-'" :src="processedImage.thumbnail" alt="Thumbnail"
+                                    class="thumbnail">
+                                <span v-else>-</span>
+                            </td>
+                            <td>{{ processedImage.detectedFaces }}</td>
+                            <td>
+                                <!-- Button to remove the image -->
+                                <button @click="removeProcessedImage(processedImage.id)"
+                                    v-if="processedImage.processingState === 'Processed'" class="delete-button">
+                                    Remove
+                                </button>
+                                <span v-else>-</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 </template>
@@ -36,6 +78,9 @@ export default {
     created() {
         const user = getLocalStorage('currentUser');
         this.currentUser = user;
+
+        // Load values from local storage when the component is created
+        this.loadValuesFromLocalStorage();
     },
     methods: {
         // Method to handle process image for face detection
@@ -61,7 +106,7 @@ export default {
 
                 // Create a thumbnail
                 const thumbnail = await createThumbnail(imageInput.files[0]);
-                
+
                 // Update the processing state to 'Processed' after a delay
                 setTimeout(() => {
                     const index = this.processedImages.findIndex(img => img.id === processingImage.id);
@@ -98,6 +143,21 @@ export default {
             this.selectedImage = null;
             // Clear the file input to allow selecting the same file again
             this.$refs.imageInput.value = '';
+        },
+         // Method to remove a processed image from user list
+         removeProcessedImage(id) {
+            this.processedImages = this.processedImages.filter(image => image.id !== id);
+            // Update local storage after deletion
+            setLocalStorage('processedImages', this.processedImages);
+        },
+        // Method to load values from local storage when the component is created
+        loadValuesFromLocalStorage() {
+            const storedUserResponses = getLocalStorage('processedImages');
+
+            if (storedUserResponses?.length) {
+                const selectedUserResponses = storedUserResponses.filter(value => value.user === this.currentUser);
+                this.processedImages = [...selectedUserResponses];
+            }
         },
     },
 };
@@ -144,6 +204,48 @@ button {
 
 button:hover {
     background-color: #0056b3;
+}
+
+/* Styles for the processed images section */
+.processed-images-section {
+    margin-top: 20px;
+}
+
+.processed-images-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.processed-images-table th,
+.processed-images-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.processed-image-row:hover {
+    background-color: #f5f5f5;
+}
+
+.thumbnail {
+    max-width: 50px;
+    max-height: 50px;
+}
+
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+    /* Center the button */
+}
+
+.delete-button:hover {
+    background-color: darkred;
 }
 </style>
   
