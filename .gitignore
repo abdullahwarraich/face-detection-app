@@ -28,9 +28,27 @@ coverage
 .settings/
 *.sublime-workspace
 
+# local env files
+.env.local
+.env.*.local
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+dist-ssr
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
