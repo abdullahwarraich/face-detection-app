@@ -11,6 +11,7 @@
 </template>
   
 <script>
+import { setLocalStorage, getLocalStorage } from '@/utils/localStorage';
 
 export default {
     data() {
@@ -19,6 +20,36 @@ export default {
         };
     },
     methods: {
+        async signup() {
+            try {
+                // Check if the username already exists in local storage
+                const usersList = getLocalStorage('users') || [];
+                const isUserAvailable = usersList.includes(this.userName);
+                
+                if (isUserAvailable) {
+                    // Show alert if the username already exists
+                    window.alert('Username already exists. Please choose a different username.');
+                    return;
+                }
+
+                // Add the new username to the list of users in local storage
+                setLocalStorage('users', [
+                    ...usersList,
+                    this.userName,
+                ]);
+
+                // Making a POST request to the authentication endpoint
+                const response = await this.$axios.post('/auth/login', { username: this.userName });
+
+                // Storing the authentication token and current user in localStorage
+                setLocalStorage('authToken', response.data.accessToken);
+                setLocalStorage('currentUser', this.userName);
+
+            } catch (error) {
+                // Handling and logging any errors that occur during sign-up
+                console.error('Sign Up failed', error);
+            }
+        },
     },
 };
 </script>

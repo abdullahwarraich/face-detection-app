@@ -12,6 +12,7 @@
 </template>
     
 <script>
+import { setLocalStorage, getLocalStorage } from '@/utils/localStorage';
 
 export default {
   data() {
@@ -20,6 +21,30 @@ export default {
     };
   },
   methods: {
+    async login() {
+      try {
+        // Check if the userName already exists in local storage
+        const usersList = getLocalStorage('users') || [];
+        const isUserAvailable = usersList.includes(this.userName);
+
+        if (!isUserAvailable) {
+          // Show alert if the userName does not match
+          window.alert(`User doesn't exist; please go and create a new user.`);
+          return;
+        }
+
+        // Making a POST request to the authentication endpoint
+        const response = await this.$axios.post('/auth/login', { userName: this.userName });
+
+        // Storing the authentication token and current user in localStorage
+        setLocalStorage('authToken', response.data.accessToken);
+        setLocalStorage('currentUser', this.userName);
+
+      } catch (error) {
+        // Handling and logging any errors that occur during login
+        console.error('Login failed', error);
+      }
+    },
   },
 };
 </script>
