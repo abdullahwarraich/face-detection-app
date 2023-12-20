@@ -1,9 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HelloWorld from '@/components/HelloWorld.vue'
+import Login from "@/pages/LoginPage.vue";
+import SignUp from "@/pages/SignupPage.vue";
 
 // Defining routes for the application
 const routes = [
-  { path: "/", component: HelloWorld },
+  { path: "/", component: Login },
+  {
+    path: "/signup",
+    name: "signup",
+    component: SignUp,
+  },
 ];
 
 // Creating the router instance
