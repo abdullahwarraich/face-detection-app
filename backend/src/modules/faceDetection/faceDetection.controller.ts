@@ -16,13 +16,17 @@ export class FaceDetectionController {
 
   @Post()
   @UseInterceptors(
+    // Use the FileInterceptor to handle file uploads
     FileInterceptor('file', {
+      // Configure multer to store files on disk with a unique filename
       storage: diskStorage({
         destination: './assets/images', // specify the upload directory
         filename: (req, file, callback) => {
+          // Generate a unique filename using the current timestamp and a random number
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
           const extension = extname(file.originalname);
+          // Callback to set the filename
           callback(null, file.fieldname + '-' + uniqueSuffix + extension);
         },
       }),
