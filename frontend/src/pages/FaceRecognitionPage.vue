@@ -1,6 +1,27 @@
 <template>
     <div class="image-container">
-        <div class="upload-image-container">
+        <div v-if="isAdminUser" class="user-statistics-section">
+            <h3>User Statistics</h3>
+            <!-- Table for displaying user statistics -->
+            <table class="user-statistics-table small-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Total Images Uploaded</th>
+                        <th>Total Face Detected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Loop through user statistics and display in the table -->
+                    <tr v-for="userStat in userStatistics" :key="userStat.user" class="user-statistics-row">
+                        <td>{{ userStat.user }}</td>
+                        <td>{{ userStat.totalImages }}</td>
+                        <td>{{ userStat.totalDetectedFaces }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-else class="upload-image-container">
             <h2>Upload an image to detect faces in the image</h2>
             <form @submit.prevent="processImage" class="upload-form">
                 <label for="itemName">Item Name:</label>
@@ -73,6 +94,7 @@ export default {
             selectedImage: null,
             currentUser: '',
             processedImages: [],
+            userStatistics: [],
         };
     },
     created() {
@@ -81,6 +103,14 @@ export default {
 
         // Load values from local storage when the component is created
         this.loadValuesFromLocalStorage();
+
+        // Load user statistics when the component is created
+        this.getUserStatistics();
+    },
+    computed: {
+        isAdminUser() {
+            return this.currentUser === 'admin' && this.userStatistics.length > 0;
+        }
     },
     methods: {
         // Method to handle process image for face detection
@@ -124,6 +154,7 @@ export default {
                     }
                 }, 5000);
 
+                this.updateUserStatistics(this.currentUser, response.data.detectedFaces);
             } catch (error) {
                 console.error('Image upload failed', error);
             } finally {
@@ -144,8 +175,8 @@ export default {
             // Clear the file input to allow selecting the same file again
             this.$refs.imageInput.value = '';
         },
-         // Method to remove a processed image from user list
-         removeProcessedImage(id) {
+        // Method to remove a processed image from user list
+        removeProcessedImage(id) {
             this.processedImages = this.processedImages.filter(image => image.id !== id);
             // Update local storage after deletion
             setLocalStorage('processedImages', this.processedImages);
@@ -157,6 +188,29 @@ export default {
             if (storedUserResponses?.length) {
                 const selectedUserResponses = storedUserResponses.filter(value => value.user === this.currentUser);
                 this.processedImages = [...selectedUserResponses];
+            }
+        },
+        // Method to update user statistics
+        updateUserStatistics(user, detectedFaces) {
+            const userStatIndex = this.userStatistics.findIndex(stat => stat.user === user);
+            if (userStatIndex !== -1) {
+                // User exists in statistics, update counts
+                this.userStatistics[userStatIndex].totalImages += 1;
+                this.userStatistics[userStatIndex].totalDetectedFaces += detectedFaces;
+            } else {
+                // User not found, add to statistics
+                this.userStatistics.push({
+                    user: user,
+                    totalImages: 1,
+                    totalDetectedFaces: detectedFaces,
+                });
+            }
+            setLocalStorage('userStatistics', this.userStatistics);
+        },
+        getUserStatistics() {
+            const storedUserStatistics = getLocalStorage('userStatistics');
+            if (storedUserStatistics && storedUserStatistics.length) {
+                this.userStatistics = storedUserStatistics;
             }
         },
     },
@@ -246,6 +300,37 @@ button:hover {
 
 .delete-button:hover {
     background-color: darkred;
+}
+
+/* Styles for the user statistics section */
+.user-statistics-section {
+    margin-top: 20px;
+    text-align: center;
+    /* Center the content */
+}
+
+.user-statistics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.user-statistics-table th,
+.user-statistics-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.user-statistics-row:hover {
+    background-color: #f5f5f5;
+}
+
+.small-table {
+    max-width: 400px;
+    /* Set a maximum width for the table */
+    margin: 0 auto;
+    /* Center the table within its container */
 }
 </style>
   
