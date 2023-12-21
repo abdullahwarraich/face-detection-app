@@ -1,5 +1,7 @@
 <template>
     <div class="image-container">
+        <!-- Use the LogoutButton component -->
+        <LogoutButton />
         <div v-if="isAdminUser" class="user-statistics-section">
             <h3>User Statistics</h3>
             <!-- Table for displaying user statistics -->
@@ -90,10 +92,13 @@ import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 import { removeDuplicatesById } from '@/utils/removeDuplicates';
 import { createThumbnail } from '@/utils/thumbnailGenerator';
 import ScreenLoader from '@/components/ScreenLoader.vue';
+import { logout } from '@/utils/logout';
+import LogoutButton from '@/components/LogoutButton.vue';
 
 export default {
     components: {
-        ScreenLoader
+        ScreenLoader,
+        LogoutButton
     },
     data() {
         return {
@@ -166,6 +171,9 @@ export default {
                 this.updateUserStatistics(this.currentUser, response.data.detectedFaces);
             } catch (error) {
                 console.error('Image upload failed', error);
+                if (error.response.data.statusCode === 401) {
+                    logout(this.$router);
+                }
             } finally {
                 // Call removeSelectedImage to clear the selected image
                 this.removeSelectedImage();
